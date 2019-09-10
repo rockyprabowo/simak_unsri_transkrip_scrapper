@@ -1,5 +1,4 @@
-import json
-import os
+import json, os, signal, re
 import settings
 from datetime import datetime
 from selenium import webdriver
@@ -11,9 +10,37 @@ from selenium.webdriver.support.ui import Select
 from selenium.webdriver.support.ui import WebDriverWait
 from urllib.parse import urlparse
 
-def _cleanup(browser, code = 1):
-    browser.quit()
+def signal_handle(signalNumber, frame):
+    print('Signal recieved: ', signalNumber)
+    _cleanup(signalNumber)
+
+def _cleanup(code = 1):
+    try:
+        global browser
+        browser.quit()
+    except NameError:
+        print("WebDriver belum diinisialisasi.")
     exit(code)
+
+def format_semester(teks_semester):
+    bagian = re.sub(r'[()]', '', teks_semester).split()
+    if(bagian[0] != 'SEMESTER'):
+        return {
+            "teks" : teks_semester,
+            "semester" : bagian[-1],
+            "tipe" : "khusus",
+            "tahun_ajaran": bagian[0]
+        }
+    else:
+        return {
+            "teks" : teks_semester,
+            "semester": bagian[1],
+            "tipe" : bagian[-1],
+            "tahun_ajaran": bagian[-2]
+        }
+
+for sig in (signal.SIGABRT, signal.SIGINT, signal.SIGTERM):
+    signal.signal(sig, signal_handle)
 
 url_halaman_depan = "https://akademik.unsri.ac.id/"
 
@@ -25,7 +52,7 @@ firefox_binary = FirefoxBinary(settings.default_firefox_binary_path)
 webdriver_options = Options()
 webdriver_options.headless = settings.webdriver_headless
 
-print("Memulai geckowebdriver")
+print("Memulai geckodriver")
 browser = webdriver.Firefox(options=webdriver_options, firefox_binary=firefox_binary)
 
 
@@ -35,12 +62,10 @@ try:
     link_ke_login = browser.find_element_by_link_text(settings.default_fakultas or input('Fakultas: '))
 except NoSuchElementException:
     print("Link ke halaman login fakultas tidak ditemukan.")
-    _cleanup(browser)
+    _cleanup()
 
 print("Link ke halaman login fakultas ditemukan")
 url_utama = link_ke_login.get_attribute('href')[:-1]
-
-# path_fakultas = urlparse(link_ke_login.get_attribute('href')).path.replace('/', '')
 
 url_halaman_gagal_login = f"{url_utama}/login/gagal.php"
 url_halaman_login = f"{url_utama}/login/login.php"
@@ -65,14 +90,14 @@ try:
     Select(prodi_select).select_by_visible_text(prodi)
 except NoSuchElementException:
     print("Program Studi tidak valid.")
-    _cleanup(browser)
+    _cleanup()
 
 submit_button.click()
 if browser.current_url == url_halaman_gagal_login:
     print("NIM/Password salah.")
-    _cleanup(browser)
+    _cleanup()
 
-print("Login berhasil")
+print(f"Login dengan NIM {nim} berhasil")
 
 output_dir = f"output/{nim}"
 os.makedirs(output_dir, exist_ok=True)
@@ -105,16 +130,19 @@ for kode_mk in daftar_kode_mk:
     tabel_pengambilan_mk = browser.find_elements_by_xpath(
         "//table[@class='table-common']//tr[preceding-sibling::tr]")
     elemen_pertama = tabel_pengambilan_mk[0].find_elements_by_tag_name("td")
+
     daftar_nilai_mk = []
     info_mk = {
         "nama_mk" : elemen_pertama[2].text,
         "sks": elemen_pertama[3].text,
     }
+
     for row in tabel_pengambilan_mk:
         info_nilai_mk = row.find_elements_by_tag_name("td")
+        info_semester = info_nilai_mk[4].text
         daftar_nilai_mk.append(
             {
-                "semester": info_nilai_mk[4].text,
+                "semester": format_semester(info_semester),
                 "dosen": list(map(lambda element: element.text, info_nilai_mk[5].find_elements_by_xpath("//ul/li"))),
                 "nilai": info_nilai_mk[6].text,
             },
@@ -136,4 +164,4 @@ with open(f'{output_dir}/riwayat_nilai_mk_{nim}_{current_time}.json', 'w', encod
 
 print(f"Proses dumping JSON transkrip nilai untuk NIM {nim} telah selesai")
 
-_cleanup(browser, 0)
+_cleanup(0)

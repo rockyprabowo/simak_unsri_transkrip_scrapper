@@ -15,46 +15,44 @@ def _cleanup(browser, code = 1):
     browser.quit()
     exit(code)
 
+url_halaman_depan = "https://akademik.unsri.ac.id/"
+
 daftar_kode_mk = []
 transkrip_nilai = []
 riwayat_nilai_mk = []
 
 firefox_binary = FirefoxBinary(settings.default_firefox_binary_path)
-
 webdriver_options = Options()
 webdriver_options.headless = settings.webdriver_headless
 
 print("Memulai geckowebdriver")
-browser = webdriver.Firefox(
-    options=webdriver_options, firefox_binary=firefox_binary
-    )
+browser = webdriver.Firefox(options=webdriver_options, firefox_binary=firefox_binary)
 
-url_halaman_depan = "https://akademik.unsri.ac.id/"
 
 print("Mengakses halaman depan SIMAK")
 browser.get(url_halaman_depan)
 try:
-    link_ke_login = browser.find_element_by_link_text(settings.default_fakultas)
+    link_ke_login = browser.find_element_by_link_text(settings.default_fakultas or input('Fakultas: '))
 except NoSuchElementException:
     print("Link ke halaman login fakultas tidak ditemukan.")
     _cleanup(browser)
 
 print("Link ke halaman login fakultas ditemukan")
-path_fakultas = urlparse(link_ke_login.get_attribute('href')).path.replace('/', '')
+url_utama = link_ke_login.get_attribute('href')[:-1]
 
-url_halaman_gagal_login = f"https://akademik.unsri.ac.id/{path_fakultas}/login/gagal.php"
-url_halaman_login = f"https://akademik.unsri.ac.id/{path_fakultas}/login/login.php"
-url_halaman_transkrip = f"https://akademik.unsri.ac.id/{path_fakultas}/module/data_akademik/transkrip/utama.php"
-url_halaman_utama = f"https://akademik.unsri.ac.id/{path_fakultas}/utama.php"
+# path_fakultas = urlparse(link_ke_login.get_attribute('href')).path.replace('/', '')
+
+url_halaman_gagal_login = f"{url_utama}/login/gagal.php"
+url_halaman_login = f"{url_utama}/login/login.php"
+url_halaman_transkrip = f"{url_utama}/module/data_akademik/transkrip/utama.php"
+url_halaman_utama = f"{url_utama}/utama.php"
 
 print("Mengakses halaman login")
 browser.get(url_halaman_login)
 username_field = browser.find_element_by_id("username")
 password_field = browser.find_element_by_id("password3")
 prodi_select = browser.find_element_by_name("id_prodi")
-submit_button = browser.find_element_by_xpath(
-    "//input[@type='submit' and @value='Login']"
-)
+submit_button = browser.find_element_by_xpath("//input[@type='submit' and @value='Login']")
 
 current_time = datetime.now().strftime('%Y%m%d_%H%M%S')
 nim = settings.default_nim or input('NIM: ')
@@ -92,17 +90,17 @@ for row in tabel_transkrip:
             "kode_mk": info_nilai_mk[1].text,
             "nama_mk": info_nilai_mk[2].text,
             "jumlah_pengambilan": info_nilai_mk[3].text,
-            "hm": info_nilai_mk[4].text,
-            "am": info_nilai_mk[5].text,
-            "k": info_nilai_mk[6].text,
-            "m": info_nilai_mk[7].text,
+            "huruf_mutu": info_nilai_mk[4].text,
+            "angka_mutu": info_nilai_mk[5].text,
+            "kredit": info_nilai_mk[6].text,
+            "mutu": info_nilai_mk[7].text,
         },
     )
 
 print("Mengambil dan memproses riwayat nilai")
 for kode_mk in daftar_kode_mk:
     browser.get(
-        f"https://akademik.unsri.ac.id/{path_fakultas}/module/data_akademik/transkrip/history.php?kode={kode_mk}"
+        f"{url_utama}/module/data_akademik/transkrip/history.php?kode={kode_mk}"
         )
     tabel_pengambilan_mk = browser.find_elements_by_xpath(
         "//table[@class='table-common']//tr[preceding-sibling::tr]")

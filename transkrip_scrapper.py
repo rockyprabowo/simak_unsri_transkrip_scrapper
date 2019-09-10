@@ -5,10 +5,7 @@ from selenium import webdriver
 from selenium.common.exceptions import TimeoutException,NoSuchElementException
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
-from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import Select
-from selenium.webdriver.support.ui import WebDriverWait
-from urllib.parse import urlparse
 
 def signal_handle(signalNumber, frame):
     print('Signal recieved: ', signalNumber)

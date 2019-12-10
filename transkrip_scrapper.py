@@ -46,11 +46,13 @@ transkrip_nilai = []
 riwayat_nilai_mk = []
 
 firefox_binary = FirefoxBinary(settings.default_firefox_binary_path)
+geckodriver_binary_path = settings.geckodriver_binary_path
 webdriver_options = Options()
 webdriver_options.headless = settings.webdriver_headless
 
+
 print("Memulai geckodriver")
-browser = webdriver.Firefox(options=webdriver_options, firefox_binary=firefox_binary)
+browser = webdriver.Firefox(options=webdriver_options, firefox_binary=firefox_binary, executable_path=geckodriver_binary_path)
 
 
 print("Mengakses halaman depan SIMAK")

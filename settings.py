@@ -11,6 +11,7 @@ default_password = os.getenv("DEFAULT_PASSWORD")
 default_fakultas = os.getenv("DEFAULT_FAKULTAS")
 default_prodi = os.getenv("DEFAULT_PRODI")
 default_firefox_binary_path = os.getenv("DEFAULT_FIREFOX_BINARY_PATH")
+geckodriver_binary_path = os.getenv("GECKODRIVER_BINARY_PATH")
 webdriver_headless = True if os.getenv("WEBDRIVER_HEADLESS") == "true" else False
 
 print("JSON Dumper Transkrip Nilai SIMAK Universitas Sriwijaya")

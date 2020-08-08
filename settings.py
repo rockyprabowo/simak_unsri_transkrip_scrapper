@@ -12,8 +12,8 @@ default_fakultas = os.getenv("DEFAULT_FAKULTAS")
 default_prodi = os.getenv("DEFAULT_PRODI")
 default_firefox_binary_path = os.getenv("DEFAULT_FIREFOX_BINARY_PATH")
 geckodriver_binary_path = os.getenv("GECKODRIVER_BINARY_PATH")
-webdriver_headless = True if os.getenv("WEBDRIVER_HEADLESS") == "true" else False
+webdriver_headless = os.getenv("WEBDRIVER_HEADLESS") == "true"
 
-print("JSON Dumper Transkrip Nilai SIMAK Universitas Sriwijaya")
+print("Scrapper Transkrip Nilai SIMAK Universitas Sriwijaya ke format JSON")
 print(f"Menggunakan opsi dari file {dotenv_path}")
 print("Here we go...")
